@@ -1,0 +1,2454 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4efe4">
+    <meta
+      name="description"
+      content="Explore orientation locations from an interactive, mobile-friendly map."
+    >
+    <title>Orientation Photo Quest</title>
+    <style>
+:root {
+  color-scheme: light;
+  --ink: #18332d;
+  --ink-muted: #557069;
+  --paper: #fffdf8;
+  --paper-warm: #f4efe4;
+  --line: #d7ddcf;
+  --green: #245c4c;
+  --green-dark: #173f35;
+  --lime: #c8dc78;
+  --coral: #e66b4f;
+  --shadow: 0 24px 60px rgba(28, 55, 47, 0.14);
+  --radius-large: 28px;
+  --radius-medium: 18px;
+  font-family:
+    Inter, Aptos, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 8%, rgba(200, 220, 120, 0.32), transparent 28rem),
+    var(--paper-warm);
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--coral);
+  outline-offset: 4px;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 12px;
+  left: 12px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--green-dark);
+  transform: translateY(-160%);
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.site-header,
+.page-shell,
+.site-footer {
+  width: min(1180px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding-block: clamp(42px, 8vw, 90px) clamp(28px, 5vw, 58px);
+}
+
+.header-copy {
+  flex: 1 1 auto;
+  max-width: 760px;
+}
+
+.eyebrow,
+.dialog-count {
+  margin: 0 0 10px;
+  color: var(--green);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  text-wrap: pretty;
+}
+
+h1 {
+  max-width: 900px;
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.7rem, 8vw, 6rem);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 0.96;
+}
+
+.introduction {
+  max-width: 680px;
+  margin: 24px 0 0;
+  color: var(--ink-muted);
+  font-size: clamp(1rem, 2.2vw, 1.25rem);
+  line-height: 1.6;
+}
+
+.header-mark {
+  position: relative;
+  flex: 0 0 var(--header-icon-width, 16%);
+  aspect-ratio: 1;
+}
+
+.header-mark-default {
+  position: absolute;
+  inset: 0;
+}
+
+.header-mark-default span {
+  position: absolute;
+  display: block;
+  border: 2px solid var(--green);
+  border-radius: 50% 50% 50% 8%;
+  background: rgba(255, 253, 248, 0.5);
+  transform: rotate(-45deg);
+}
+
+.header-mark-default span:nth-child(1) {
+  inset: 0 30% 30% 0;
+}
+
+.header-mark-default span:nth-child(2) {
+  inset: 28% 0 0 28%;
+  border-color: var(--coral);
+}
+
+.header-mark-default span:nth-child(3) {
+  inset: 42% 42% 16% 16%;
+  border-color: var(--green-dark);
+  background: var(--lime);
+}
+
+.header-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.site-header[data-header-alignment="center"] .header-copy {
+  text-align: center;
+}
+
+.site-header[data-header-alignment="center"] .introduction {
+  margin-inline: auto;
+}
+
+.site-header[data-header-alignment="right"] .header-copy {
+  text-align: right;
+}
+
+.site-header[data-header-alignment="right"] .introduction {
+  margin-left: auto;
+}
+
+.page-shell {
+  padding-bottom: 48px;
+}
+
+.map-card {
+  --marker-color: var(--green);
+  --marker-size: 56px;
+  --marker-foreground: #fff;
+  overflow: hidden;
+  border: 1px solid rgba(23, 63, 53, 0.12);
+  border-radius: var(--radius-large);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  padding-top: clamp(18px, 3vw, 28px);
+}
+
+.dialog-copy h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.map-frame {
+  position: relative;
+  overflow: hidden;
+  margin-inline: clamp(14px, 3vw, 32px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-medium);
+  background: #dce7d4;
+  cursor: default;
+  isolation: isolate;
+  touch-action: pan-y;
+}
+
+.map-frame.is-pannable {
+  cursor: grab;
+}
+
+.map-frame.is-zoomed {
+  touch-action: none;
+}
+
+.map-frame.is-panning {
+  cursor: grabbing;
+}
+
+body.map-expanded-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.map-frame.is-expanded {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  touch-action: none;
+}
+
+.map-frame.is-expanded .map-canvas {
+  width: max-content;
+  min-width: 100%;
+  height: 100%;
+}
+
+.map-frame.is-expanded .map-image {
+  width: auto;
+  max-width: none;
+  height: 100%;
+}
+
+.map-frame.is-expanded .map-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+.map-canvas {
+  position: relative;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.map-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.map-placeholder {
+  position: relative;
+  display: grid;
+  min-height: 280px;
+  aspect-ratio: 16 / 10;
+  place-items: center;
+  overflow: hidden;
+  color: rgba(24, 51, 45, 0.58);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.32) 1px, transparent 1px) 0 0 / 52px 52px,
+    linear-gradient(rgba(255, 255, 255, 0.32) 1px, transparent 1px) 0 0 / 52px 52px,
+    #dce7d4;
+}
+
+.map-placeholder p {
+  position: relative;
+  z-index: 2;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 253, 248, 0.86);
+}
+
+.map-shade {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  opacity: var(--map-overlay-strength, 0.18);
+  background: linear-gradient(
+    180deg,
+    rgba(8, 28, 23, 0.5),
+    rgba(8, 28, 23, 1)
+  );
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.placeholder-road,
+.placeholder-block {
+  position: absolute;
+  opacity: 0.68;
+}
+
+.placeholder-road {
+  width: 130%;
+  height: 11%;
+  border: 12px solid rgba(255, 253, 248, 0.82);
+  border-right: 0;
+  border-left: 0;
+  background: #b7c4b0;
+}
+
+.placeholder-road-one {
+  top: 25%;
+  left: -12%;
+  transform: rotate(9deg);
+}
+
+.placeholder-road-two {
+  top: 63%;
+  left: -10%;
+  transform: rotate(-17deg);
+}
+
+.placeholder-block {
+  border: 5px solid rgba(255, 253, 248, 0.75);
+  border-radius: 20px;
+  background: #a2bea7;
+}
+
+.placeholder-block-one {
+  top: 10%;
+  left: 13%;
+  width: 24%;
+  height: 24%;
+  transform: rotate(-5deg);
+}
+
+.placeholder-block-two {
+  top: 42%;
+  right: 17%;
+  width: 30%;
+  height: 24%;
+  transform: rotate(7deg);
+}
+
+.placeholder-block-three {
+  bottom: 4%;
+  left: 25%;
+  width: 20%;
+  height: 18%;
+  transform: rotate(-10deg);
+}
+
+.map-markers {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+}
+
+.map-marker-anchor {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.map-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  width: var(--marker-size);
+  height: var(--marker-size);
+  padding: 0;
+  place-items: center;
+  border: 4px solid var(--marker-foreground);
+  border-radius: 50%;
+  color: var(--marker-foreground);
+  background: var(--marker-color);
+  box-shadow: 0 8px 22px rgba(23, 63, 53, 0.28);
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translate(-50%, -100%);
+  transition: filter 160ms ease;
+}
+
+.map-marker[data-marker-style="pin"] {
+  border-radius: 50% 50% 50% 12%;
+  transform: translate(-50%, -100%) rotate(-45deg);
+}
+
+.map-marker[data-marker-style="circle"] {
+  border-radius: 50%;
+}
+
+.map-marker[data-marker-style="star"] {
+  border: 0;
+  border-radius: 0;
+  background: var(--marker-foreground);
+  clip-path: polygon(
+    50% 0%,
+    61% 34%,
+    98% 35%,
+    68% 56%,
+    79% 92%,
+    50% 70%,
+    21% 92%,
+    32% 56%,
+    2% 35%,
+    39% 34%
+  );
+}
+
+.map-marker[data-marker-style="star"]::before {
+  position: absolute;
+  z-index: 0;
+  inset: 4px;
+  background: var(--marker-color);
+  clip-path: inherit;
+  content: "";
+}
+
+.map-marker[data-marker-style="custom"] {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.map-marker-number {
+  position: relative;
+  z-index: 2;
+  font-size: clamp(0.8rem, calc(var(--marker-size) * 0.28), 1.35rem);
+  font-weight: 900;
+}
+
+.map-marker[data-marker-style="pin"] .map-marker-number {
+  transform: rotate(45deg);
+}
+
+.map-marker-custom-icon {
+  position: absolute;
+  z-index: 1;
+  inset: 3px;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  object-fit: contain;
+  filter:
+    drop-shadow(2px 0 0 var(--marker-foreground))
+    drop-shadow(-2px 0 0 var(--marker-foreground))
+    drop-shadow(0 2px 0 var(--marker-foreground))
+    drop-shadow(0 -2px 0 var(--marker-foreground));
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.map-marker:hover {
+  filter: brightness(0.78);
+}
+
+.map-marker:focus-visible {
+  outline-offset: 5px;
+}
+
+.location-key {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: clamp(22px, 4vw, 34px);
+  list-style: none;
+  counter-reset: location;
+}
+
+.location-key li {
+  counter-increment: location;
+}
+
+.key-button {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--ink);
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+
+.key-button:hover {
+  background: var(--paper-warm);
+}
+
+.key-number {
+  display: grid;
+  flex: 0 0 36px;
+  height: 36px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 800;
+  background: var(--marker-color);
+}
+
+.map-expand-button {
+  position: absolute;
+  z-index: 6;
+  top: 12px;
+  right: 12px;
+  min-height: 44px;
+  padding: 9px 15px;
+  border: 1px solid rgba(23, 63, 53, 0.25);
+  border-radius: 999px;
+  color: var(--green);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  background: rgba(255, 253, 248, 0.96);
+  box-shadow: 0 8px 24px rgba(23, 63, 53, 0.2);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.map-expand-button:hover {
+  background: #fff;
+}
+
+.map-expand-button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.map-frame.is-expanded .map-expand-button {
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+}
+
+.map-frame.is-expanded .map-controls {
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.map-controls {
+  position: absolute;
+  z-index: 5;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px;
+  border: 1px solid rgba(23, 63, 53, 0.2);
+  border-radius: 14px;
+  background: rgba(255, 253, 248, 0.94);
+  box-shadow: 0 8px 24px rgba(23, 63, 53, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.map-controls button {
+  display: grid;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 9px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--green);
+  font-weight: 900;
+  background: var(--paper);
+  cursor: pointer;
+}
+
+.map-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.map-controls label {
+  display: flex;
+  align-items: center;
+}
+
+.map-controls input {
+  width: clamp(82px, 14vw, 150px);
+  accent-color: var(--green);
+}
+
+.map-controls output {
+  min-width: 40px;
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.map-controls .map-reset-button {
+  padding-inline: 11px;
+  font-size: 0.78rem;
+}
+
+.map-navigation-hint {
+  margin: 10px clamp(18px, 4vw, 38px) 0;
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+.key-title {
+  font-weight: 700;
+}
+
+.site-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-block: 24px 38px;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+.footer-note {
+  text-align: right;
+}
+
+.location-dialog {
+  width: min(680px, calc(100% - 24px));
+  max-height: min(880px, calc(100dvh - 24px));
+  padding: 0;
+  overflow: hidden auto;
+  border: 0;
+  border-radius: var(--radius-large);
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: 0 32px 90px rgba(9, 31, 25, 0.35);
+}
+
+.location-dialog::backdrop {
+  background: rgba(12, 32, 27, 0.7);
+  backdrop-filter: blur(6px);
+}
+
+.dialog-shell {
+  position: relative;
+  padding: clamp(22px, 5vw, 42px);
+}
+
+.icon-button {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--paper);
+  cursor: pointer;
+}
+
+.dialog-close {
+  position: sticky;
+  z-index: 4;
+  top: 0;
+  float: right;
+  margin: -8px -8px 8px 12px;
+  font-size: 1.8rem;
+  line-height: 1;
+  box-shadow: 0 6px 18px rgba(23, 63, 53, 0.14);
+}
+
+.dialog-copy {
+  padding-right: 46px;
+}
+
+.carousel {
+  margin-top: 26px;
+}
+
+.carousel-stage {
+  display: grid;
+  overflow: hidden;
+  min-height: 260px;
+  aspect-ratio: var(--gallery-aspect-ratio, 16 / 9);
+  place-items: center;
+  border-radius: var(--radius-medium);
+  color: #fff;
+  background: var(--green);
+}
+
+.carousel-stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.photo-placeholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  padding: 28px;
+  place-items: center;
+  text-align: center;
+  background:
+    radial-gradient(circle at 22% 25%, rgba(200, 220, 120, 0.7), transparent 13rem),
+    linear-gradient(145deg, var(--green), var(--green-dark));
+}
+
+.photo-placeholder span {
+  max-width: 360px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  line-height: 1.1;
+}
+
+.carousel-controls {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.carousel-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--green);
+  font-weight: 800;
+  background: transparent;
+  cursor: pointer;
+}
+
+.carousel-button:hover {
+  background: var(--paper-warm);
+}
+
+.carousel-status {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.dialog-description {
+  margin: 24px 0 0;
+  color: var(--ink-muted);
+  font-size: 1.04rem;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.dialog-description:empty,
+.dialog-links:empty {
+  display: none;
+}
+
+.dialog-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.dialog-link {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border: 2px solid var(--green);
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+  background: var(--green);
+}
+
+.dialog-link:nth-child(2) {
+  color: var(--green);
+  background: transparent;
+}
+
+.dialog-link:hover {
+  color: #fff;
+  border-color: var(--green-dark);
+  background: var(--green-dark);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.noscript-message {
+  position: fixed;
+  z-index: 20;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  color: #fff;
+  text-align: center;
+  background: var(--green-dark);
+}
+
+@media (max-width: 720px) {
+  .site-header,
+  .page-shell,
+  .site-footer {
+    width: min(100% - 20px, 1180px);
+  }
+
+  .site-header {
+    align-items: flex-end;
+  }
+
+  .map-frame {
+    height: clamp(360px, 52vh, 520px);
+    height: clamp(360px, 52svh, 520px);
+    margin-inline: 8px;
+    border-radius: 14px;
+  }
+
+  .map-canvas {
+    width: max-content;
+    min-width: 100%;
+    height: 100%;
+  }
+
+  .map-image {
+    width: auto;
+    max-width: none;
+    height: 100%;
+  }
+
+  .map-placeholder {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+
+  .map-controls {
+    right: 8px;
+    bottom: 8px;
+  }
+
+  .map-controls input {
+    width: 72px;
+  }
+
+  .map-controls .map-reset-button,
+  .map-controls output {
+    display: none;
+  }
+
+  .map-navigation-hint {
+    text-align: left;
+  }
+
+  .location-key {
+    grid-template-columns: 1fr;
+    padding-inline: 16px;
+  }
+
+  .site-footer {
+    display: block;
+  }
+
+  .footer-note {
+    margin-top: 8px !important;
+    text-align: left;
+  }
+
+  .location-dialog {
+    width: calc(100% - 12px);
+    max-height: calc(100dvh - 12px);
+    border-radius: 22px;
+  }
+
+  .carousel-button span:not([aria-hidden]) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#map-card">Skip to the map</a>
+
+    <header id="site-header" class="site-header" data-header-alignment="left">
+      <div class="header-copy">
+        <p id="site-eyebrow" class="eyebrow">Explore at your own pace</p>
+        <h1 id="site-title">Orientation Photo Quest</h1>
+        <p id="site-introduction" class="introduction">
+          Select a numbered location on the map to see what you will find there.
+        </p>
+      </div>
+      <div class="header-mark">
+        <div id="header-mark-default" class="header-mark-default" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <img
+          id="header-icon"
+          class="header-icon"
+          alt=""
+          draggable="false"
+          hidden
+        >
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section id="map-card" class="map-card" aria-label="Interactive location map">
+        <div id="map-frame" class="map-frame">
+          <div id="map-canvas" class="map-canvas">
+            <img id="map-image" class="map-image" alt="" draggable="false" hidden>
+            <div id="map-placeholder" class="map-placeholder">
+              <div class="placeholder-road placeholder-road-one"></div>
+              <div class="placeholder-road placeholder-road-two"></div>
+              <div class="placeholder-block placeholder-block-one"></div>
+              <div class="placeholder-block placeholder-block-two"></div>
+              <div class="placeholder-block placeholder-block-three"></div>
+              <p>Sample map area</p>
+            </div>
+          </div>
+          <div id="map-shade" class="map-shade" aria-hidden="true" hidden></div>
+          <div id="map-markers" class="map-markers" aria-label="Map locations"></div>
+
+          <button
+            id="map-expand"
+            class="map-expand-button"
+            type="button"
+            aria-expanded="false"
+          >
+            <span id="map-expand-label">Expand map</span>
+          </button>
+
+          <div id="map-controls" class="map-controls" aria-label="Map zoom controls">
+            <button id="map-zoom-out" type="button" aria-label="Zoom out">−</button>
+            <label>
+              <span class="visually-hidden">Map zoom level</span>
+              <input id="map-zoom-range" type="range" min="1" max="4" step="0.1" value="1">
+            </label>
+            <button id="map-zoom-in" type="button" aria-label="Zoom in">+</button>
+            <button id="map-zoom-reset" class="map-reset-button" type="button">
+              Reset
+            </button>
+            <output id="map-zoom-status" for="map-zoom-range">1.0×</output>
+          </div>
+        </div>
+
+        <p id="map-navigation-hint" class="map-navigation-hint">
+          Zoom with the controls, then drag the map to explore.
+        </p>
+
+        <ol id="location-key" class="location-key" aria-label="Location key"></ol>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Orientation Photo Quest</p>
+      <p class="footer-note">Designed for phones, tablets, and desktop browsers.</p>
+    </footer>
+
+    <dialog id="location-dialog" class="location-dialog" aria-labelledby="dialog-title">
+      <div class="dialog-shell">
+        <button id="dialog-close" class="icon-button dialog-close" type="button">
+          <span aria-hidden="true">×</span>
+          <span class="visually-hidden">Close location details</span>
+        </button>
+
+        <div class="dialog-copy">
+          <p id="dialog-count" class="dialog-count"></p>
+          <h2 id="dialog-title"></h2>
+        </div>
+
+        <div
+          id="carousel"
+          class="carousel"
+          role="group"
+          aria-roledescription="carousel"
+          aria-label="Location photos"
+        >
+          <div id="carousel-stage" class="carousel-stage" aria-live="polite"></div>
+          <div id="carousel-controls" class="carousel-controls">
+            <button id="carousel-previous" class="carousel-button" type="button">
+              <span aria-hidden="true">←</span>
+              <span>Previous</span>
+            </button>
+            <p id="carousel-status" class="carousel-status"></p>
+            <button id="carousel-next" class="carousel-button" type="button">
+              <span>Next</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
+
+        <p id="dialog-description" class="dialog-description"></p>
+        <div id="dialog-links" class="dialog-links"></div>
+      </div>
+    </dialog>
+
+    <noscript>
+      <div class="noscript-message">
+        This interactive map requires JavaScript to display its locations.
+      </div>
+    </noscript>
+
+    <script>
+window.ORIENTATION_MAP_DATA = {
+  "siteTitle": "Orientation Photo Quest",
+  "introduction": "Select a numbered location on the map to see what you will find there.",
+  "header": {
+    "eyebrow": "Explore at your own pace",
+    "alignment": "left",
+    "icon": "",
+    "iconAlt": "",
+    "iconWidth": 16
+  },
+  "display": {
+    "showLocationKey": true
+  },
+  "map": {
+    "image": "./assets/map.png",
+    "alt": "Orientation map from firstday2016-19.png",
+    "allowZoom": true,
+    "maxZoom": 4,
+    "initialView": {
+      "zoom": 1.4,
+      "centerX": 0.6428571428571428,
+      "centerY": 0.37098479841374754
+    },
+    "contrastOverlay": {
+      "enabled": false,
+      "strength": 18
+    }
+  },
+  "locations": [
+    {
+      "id": "welcome-center",
+      "title": "Welcome Center",
+      "x": 0.23,
+      "y": 0.43,
+      "marker": {
+        "style": "pin",
+        "size": 56,
+        "color": "#245c4c",
+        "foreground": "white",
+        "icon": ""
+      },
+      "gallery": {
+        "aspectRatio": "4:3"
+      },
+      "description": "Start here to get oriented, meet the welcome team, and find answers to your first questions.",
+      "images": [],
+      "links": [
+        {
+          "label": "Visitor information",
+          "url": "https://example.org/visitor-information"
+        },
+        {
+          "label": "Get directions",
+          "url": "https://example.org/directions"
+        }
+      ]
+    },
+    {
+      "id": "library",
+      "title": "Library",
+      "x": 0.63,
+      "y": 0.32,
+      "marker": {
+        "style": "star",
+        "size": 64,
+        "color": "#e66b4f",
+        "foreground": "black",
+        "icon": ""
+      },
+      "gallery": {
+        "aspectRatio": "16:9"
+      },
+      "description": "Explore study spaces, research support, technology resources, and places to work with a group.",
+      "images": [],
+      "links": [
+        {
+          "label": "Library website",
+          "url": "https://example.org/library"
+        }
+      ]
+    },
+    {
+      "id": "student-commons",
+      "title": "Student Commons",
+      "x": 0.48,
+      "y": 0.77,
+      "marker": {
+        "style": "circle",
+        "size": 48,
+        "color": "#386f82",
+        "foreground": "white",
+        "icon": ""
+      },
+      "gallery": {
+        "aspectRatio": "1:1"
+      },
+      "description": "",
+      "images": [],
+      "links": []
+    },
+    {
+      "id": "location-4",
+      "title": "Location 4",
+      "x": 0.7062764456981664,
+      "y": 0.23793334272829764,
+      "marker": {
+        "style": "pin",
+        "size": 56,
+        "color": "#245c4c",
+        "foreground": "white",
+        "icon": ""
+      },
+      "gallery": {
+        "aspectRatio": "16:9"
+      },
+      "description": "",
+      "images": [],
+      "links": []
+    },
+    {
+      "id": "location-5",
+      "title": "Location 5",
+      "x": 0.6079866008462623,
+      "y": 0.4099099471249173,
+      "marker": {
+        "style": "pin",
+        "size": 56,
+        "color": "#245c4c",
+        "foreground": "white",
+        "icon": ""
+      },
+      "gallery": {
+        "aspectRatio": "1:1"
+      },
+      "description": "",
+      "images": [
+        {
+          "src": "./assets/locations/location-5-1.png",
+          "alt": "Lily at its help desk"
+        }
+      ],
+      "links": []
+    }
+  ]
+};
+    </script>
+    <script>
+(function (root, factory) {
+  "use strict";
+
+  const api = factory();
+
+  if (typeof module === "object" && module.exports) {
+    module.exports = api;
+  }
+
+  root.OrientationMapViewport = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+
+  function clamp(value, minimum, maximum) {
+    return Math.min(maximum, Math.max(minimum, value));
+  }
+
+  function normalizeZoom(value, maximum) {
+    const number = Number(value);
+    const max = Math.max(1, Number(maximum) || 1);
+    return clamp(Number.isFinite(number) ? number : 1, 1, max);
+  }
+
+  function normalizeView(value, maximum) {
+    const source = value && typeof value === "object" ? value : {};
+    const centerX = Number(source.centerX);
+    const centerY = Number(source.centerY);
+
+    return {
+      zoom: normalizeZoom(source.zoom, maximum),
+      centerX: clamp(Number.isFinite(centerX) ? centerX : 0.5, 0, 1),
+      centerY: clamp(Number.isFinite(centerY) ? centerY : 0.5, 0, 1)
+    };
+  }
+
+  function clampPan(state, width, height, contentWidth, contentHeight) {
+    const mapWidth =
+      Number(contentWidth) > 0 ? Number(contentWidth) : Number(width) || 0;
+    const mapHeight =
+      Number(contentHeight) > 0 ? Number(contentHeight) : Number(height) || 0;
+    const minX = Math.min(0, width - mapWidth * state.zoom);
+    const minY = Math.min(0, height - mapHeight * state.zoom);
+    state.panX = clamp(Number(state.panX) || 0, minX, 0);
+    state.panY = clamp(Number(state.panY) || 0, minY, 0);
+    return state;
+  }
+
+  function toContentPoint(
+    clientX,
+    clientY,
+    rectangle,
+    state,
+    contentWidth,
+    contentHeight
+  ) {
+    if (!rectangle || rectangle.width <= 0 || rectangle.height <= 0) {
+      return { x: 0.5, y: 0.5 };
+    }
+
+    const mapWidth = Number(contentWidth) > 0 ? contentWidth : rectangle.width;
+    const mapHeight = Number(contentHeight) > 0 ? contentHeight : rectangle.height;
+    return {
+      x: clamp(
+        (clientX - rectangle.left - state.panX) /
+          state.zoom /
+          mapWidth,
+        0,
+        1
+      ),
+      y: clamp(
+        (clientY - rectangle.top - state.panY) /
+          state.zoom /
+          mapHeight,
+        0,
+        1
+      )
+    };
+  }
+
+  function viewStateFromCenter(
+    value,
+    width,
+    height,
+    contentWidth,
+    contentHeight,
+    maximum
+  ) {
+    const view = normalizeView(value, maximum);
+    const mapWidth =
+      Number(contentWidth) > 0 ? Number(contentWidth) : Number(width) || 0;
+    const mapHeight =
+      Number(contentHeight) > 0 ? Number(contentHeight) : Number(height) || 0;
+    return clampPan(
+      {
+        zoom: view.zoom,
+        panX: Number(width) / 2 - view.centerX * mapWidth * view.zoom,
+        panY: Number(height) / 2 - view.centerY * mapHeight * view.zoom
+      },
+      Number(width) || 0,
+      Number(height) || 0,
+      mapWidth,
+      mapHeight
+    );
+  }
+
+  function createController(options) {
+    const viewport = options.viewport;
+    const content = options.content;
+    const zoomInput = options.zoomInput || null;
+    const zoomInButton = options.zoomInButton || null;
+    const zoomOutButton = options.zoomOutButton || null;
+    const resetButton = options.resetButton || null;
+    const zoomStatus = options.zoomStatus || null;
+    const ignoredSelector =
+      options.ignoredSelector || "button, input, a, .map-controls";
+    const pointers = new Map();
+    const supportsTouchEvents =
+      typeof window !== "undefined" && "TouchEvent" in window;
+    const state = {
+      zoom: 1,
+      panX: 0,
+      panY: 0,
+      maxZoom: Math.max(1, Number(options.maxZoom) || 4),
+      enabled: options.enabled !== false
+    };
+    let homeView = normalizeView(options.homeView, state.maxZoom);
+    let gesture = null;
+    let touchGesture = null;
+
+    function rectangle() {
+      return viewport.getBoundingClientRect();
+    }
+
+    function measurements() {
+      const bounds = rectangle();
+      return {
+        bounds,
+        contentWidth: Math.max(bounds.width, content.offsetWidth || 0),
+        contentHeight: Math.max(bounds.height, content.offsetHeight || 0)
+      };
+    }
+
+    function stateForView(value, view) {
+      const current = view || measurements();
+      return viewStateFromCenter(
+        value,
+        current.bounds.width,
+        current.bounds.height,
+        current.contentWidth,
+        current.contentHeight,
+        state.maxZoom
+      );
+    }
+
+    function canPan(view) {
+      const current = view || measurements();
+      return (
+        state.enabled &&
+        (current.contentWidth * state.zoom > current.bounds.width + 0.5 ||
+          current.contentHeight * state.zoom > current.bounds.height + 0.5)
+      );
+    }
+
+    function applyState() {
+      const view = measurements();
+      const bounds = view.bounds;
+      clampPan(
+        state,
+        bounds.width,
+        bounds.height,
+        view.contentWidth,
+        view.contentHeight
+      );
+      content.style.transform = `translate3d(${state.panX}px, ${state.panY}px, 0) scale(${state.zoom})`;
+      viewport.classList.toggle("is-zoomed", state.zoom > 1.001);
+      viewport.classList.toggle("is-pannable", canPan(view));
+
+      if (zoomInput) {
+        zoomInput.min = "1";
+        zoomInput.max = String(state.maxZoom);
+        zoomInput.step = "0.1";
+        zoomInput.value = String(state.zoom);
+        zoomInput.disabled = !state.enabled;
+      }
+      if (zoomInButton) {
+        zoomInButton.disabled = !state.enabled || state.zoom >= state.maxZoom - 0.001;
+      }
+      if (zoomOutButton) {
+        zoomOutButton.disabled = !state.enabled || state.zoom <= 1.001;
+      }
+      if (resetButton) {
+        const resetState = stateForView(homeView, view);
+        resetButton.disabled =
+          !state.enabled ||
+          (Math.abs(state.zoom - resetState.zoom) < 0.001 &&
+            Math.abs(state.panX - resetState.panX) < 0.5 &&
+            Math.abs(state.panY - resetState.panY) < 0.5);
+      }
+      if (zoomStatus) {
+        zoomStatus.textContent = `${state.zoom.toFixed(1)}×`;
+      }
+      options.onViewChange?.({ ...state });
+    }
+
+    function setZoom(nextZoom, focalX, focalY) {
+      if (!state.enabled) {
+        return;
+      }
+
+      const bounds = rectangle();
+      const next = normalizeZoom(nextZoom, state.maxZoom);
+      const focusX = Number.isFinite(focalX) ? focalX : bounds.width / 2;
+      const focusY = Number.isFinite(focalY) ? focalY : bounds.height / 2;
+      const contentX = (focusX - state.panX) / state.zoom;
+      const contentY = (focusY - state.panY) / state.zoom;
+
+      state.zoom = next;
+      state.panX = focusX - contentX * next;
+      state.panY = focusY - contentY * next;
+      applyState();
+    }
+
+    function reset() {
+      const resetState = stateForView(homeView);
+      state.zoom = resetState.zoom;
+      state.panX = resetState.panX;
+      state.panY = resetState.panY;
+      applyState();
+    }
+
+    function setView(nextView) {
+      const nextState = stateForView(nextView);
+      state.zoom = nextState.zoom;
+      state.panX = nextState.panX;
+      state.panY = nextState.panY;
+      applyState();
+    }
+
+    function pointerPosition(event) {
+      const bounds = rectangle();
+      return {
+        x: event.clientX - bounds.left,
+        y: event.clientY - bounds.top,
+        clientX: event.clientX,
+        clientY: event.clientY
+      };
+    }
+
+    function ignoredTarget(target) {
+      return Boolean(target?.closest?.(ignoredSelector));
+    }
+
+    function beginPinch() {
+      const active = Array.from(pointers.values()).slice(0, 2);
+      const dx = active[1].x - active[0].x;
+      const dy = active[1].y - active[0].y;
+      const midpointX = (active[0].x + active[1].x) / 2;
+      const midpointY = (active[0].y + active[1].y) / 2;
+
+      gesture = {
+        type: "pinch",
+        startDistance: Math.max(1, Math.hypot(dx, dy)),
+        startZoom: state.zoom,
+        contentX: (midpointX - state.panX) / state.zoom,
+        contentY: (midpointY - state.panY) / state.zoom,
+        moved: true
+      };
+    }
+
+    function pointerDown(event) {
+      if (
+        !state.enabled ||
+        (event.pointerType === "touch" && supportsTouchEvents) ||
+        event.button !== 0 ||
+        ignoredTarget(event.target)
+      ) {
+        return;
+      }
+
+      const position = pointerPosition(event);
+      pointers.set(event.pointerId, position);
+      if (canPan()) {
+        event.preventDefault();
+      }
+      try {
+        viewport.setPointerCapture?.(event.pointerId);
+      } catch (_error) {
+        // Pointer tracking continues on the viewport when capture is unavailable.
+      }
+
+      if (pointers.size === 1) {
+        gesture = {
+          type: "pan",
+          startX: position.x,
+          startY: position.y,
+          startPanX: state.panX,
+          startPanY: state.panY,
+          moved: false
+        };
+      } else if (pointers.size === 2) {
+        beginPinch();
+      }
+    }
+
+    function pointerMove(event) {
+      if (!pointers.has(event.pointerId) || !gesture) {
+        return;
+      }
+
+      const position = pointerPosition(event);
+      pointers.set(event.pointerId, position);
+
+      if (pointers.size >= 2 && gesture.type === "pinch") {
+        const active = Array.from(pointers.values()).slice(0, 2);
+        const dx = active[1].x - active[0].x;
+        const dy = active[1].y - active[0].y;
+        const midpointX = (active[0].x + active[1].x) / 2;
+        const midpointY = (active[0].y + active[1].y) / 2;
+        const distance = Math.max(1, Math.hypot(dx, dy));
+
+        state.zoom = normalizeZoom(
+          gesture.startZoom * (distance / gesture.startDistance),
+          state.maxZoom
+        );
+        state.panX = midpointX - gesture.contentX * state.zoom;
+        state.panY = midpointY - gesture.contentY * state.zoom;
+        applyState();
+        return;
+      }
+
+      if (gesture.type === "pan") {
+        const deltaX = position.x - gesture.startX;
+        const deltaY = position.y - gesture.startY;
+        gesture.moved = gesture.moved || Math.hypot(deltaX, deltaY) > 6;
+
+        if (canPan()) {
+          event.preventDefault();
+          state.panX = gesture.startPanX + deltaX;
+          state.panY = gesture.startPanY + deltaY;
+          viewport.classList.add("is-panning");
+          applyState();
+        }
+      }
+    }
+
+    function finishPointer(event, cancelled) {
+      if (!pointers.has(event.pointerId)) {
+        return;
+      }
+
+      const finishedGesture = gesture;
+      const finishedPosition = pointers.get(event.pointerId);
+      pointers.delete(event.pointerId);
+      viewport.classList.remove("is-panning");
+
+      if (viewport.hasPointerCapture?.(event.pointerId)) {
+        viewport.releasePointerCapture?.(event.pointerId);
+      }
+
+      if (pointers.size === 1) {
+        const remaining = Array.from(pointers.values())[0];
+        gesture = {
+          type: "pan",
+          startX: remaining.x,
+          startY: remaining.y,
+          startPanX: state.panX,
+          startPanY: state.panY,
+          moved: true
+        };
+      } else {
+        gesture = null;
+      }
+
+      if (
+        !cancelled &&
+        pointers.size === 0 &&
+        finishedGesture?.type === "pan" &&
+        !finishedGesture.moved &&
+        typeof options.onTap === "function"
+      ) {
+        options.onTap({
+          clientX: finishedPosition.clientX,
+          clientY: finishedPosition.clientY,
+          point: toContentPoint(
+            finishedPosition.clientX,
+            finishedPosition.clientY,
+            rectangle(),
+            state
+          )
+        });
+      }
+    }
+
+    function touchPosition(touch) {
+      const bounds = rectangle();
+      return {
+        x: touch.clientX - bounds.left,
+        y: touch.clientY - bounds.top,
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      };
+    }
+
+    function beginTouchPan(touch, moved) {
+      const position = touchPosition(touch);
+      touchGesture = {
+        type: "pan",
+        startX: position.x,
+        startY: position.y,
+        startPanX: state.panX,
+        startPanY: state.panY,
+        clientX: position.clientX,
+        clientY: position.clientY,
+        axis: state.zoom > 1.001 ? "pan" : null,
+        moved: Boolean(moved)
+      };
+    }
+
+    function beginTouchPinch(touches) {
+      const first = touchPosition(touches[0]);
+      const second = touchPosition(touches[1]);
+      const dx = second.x - first.x;
+      const dy = second.y - first.y;
+      const midpointX = (first.x + second.x) / 2;
+      const midpointY = (first.y + second.y) / 2;
+
+      touchGesture = {
+        type: "pinch",
+        startDistance: Math.max(1, Math.hypot(dx, dy)),
+        startZoom: state.zoom,
+        contentX: (midpointX - state.panX) / state.zoom,
+        contentY: (midpointY - state.panY) / state.zoom,
+        moved: true
+      };
+    }
+
+    function touchStart(event) {
+      if (!state.enabled || ignoredTarget(event.target)) {
+        return;
+      }
+
+      if (event.touches.length >= 2) {
+        beginTouchPinch(event.touches);
+        event.preventDefault();
+      } else if (event.touches.length === 1) {
+        beginTouchPan(event.touches[0], false);
+        if (state.zoom > 1.001) {
+          event.preventDefault();
+        }
+      }
+    }
+
+    function touchMove(event) {
+      if (!state.enabled || !touchGesture) {
+        return;
+      }
+
+      if (event.touches.length >= 2) {
+        if (touchGesture.type !== "pinch") {
+          beginTouchPinch(event.touches);
+        }
+
+        const first = touchPosition(event.touches[0]);
+        const second = touchPosition(event.touches[1]);
+        const dx = second.x - first.x;
+        const dy = second.y - first.y;
+        const midpointX = (first.x + second.x) / 2;
+        const midpointY = (first.y + second.y) / 2;
+        const distance = Math.max(1, Math.hypot(dx, dy));
+
+        event.preventDefault();
+        state.zoom = normalizeZoom(
+          touchGesture.startZoom *
+            (distance / touchGesture.startDistance),
+          state.maxZoom
+        );
+        state.panX = midpointX - touchGesture.contentX * state.zoom;
+        state.panY = midpointY - touchGesture.contentY * state.zoom;
+        viewport.classList.add("is-panning");
+        applyState();
+        return;
+      }
+
+      if (event.touches.length !== 1 || touchGesture.type !== "pan") {
+        return;
+      }
+
+      const position = touchPosition(event.touches[0]);
+      const deltaX = position.x - touchGesture.startX;
+      const deltaY = position.y - touchGesture.startY;
+      const distance = Math.hypot(deltaX, deltaY);
+      touchGesture.clientX = position.clientX;
+      touchGesture.clientY = position.clientY;
+      touchGesture.moved = touchGesture.moved || distance > 6;
+
+      if (!touchGesture.axis && distance > 6) {
+        touchGesture.axis =
+          state.zoom > 1.001 || Math.abs(deltaX) >= Math.abs(deltaY)
+            ? "pan"
+            : "scroll";
+      }
+
+      if (touchGesture.axis !== "pan" || !canPan()) {
+        return;
+      }
+
+      event.preventDefault();
+      state.panX = touchGesture.startPanX + deltaX;
+      state.panY = touchGesture.startPanY + deltaY;
+      viewport.classList.add("is-panning");
+      applyState();
+    }
+
+    function finishTouch(event, cancelled) {
+      if (!touchGesture) {
+        return;
+      }
+
+      const finishedGesture = touchGesture;
+      viewport.classList.remove("is-panning");
+
+      if (event.touches.length >= 2) {
+        beginTouchPinch(event.touches);
+        return;
+      }
+      if (event.touches.length === 1) {
+        beginTouchPan(event.touches[0], true);
+        return;
+      }
+
+      touchGesture = null;
+      const finishedTouch = event.changedTouches?.[0];
+      if (
+        !cancelled &&
+        finishedTouch &&
+        finishedGesture.type === "pan" &&
+        !finishedGesture.moved &&
+        typeof options.onTap === "function"
+      ) {
+        const view = measurements();
+        options.onTap({
+          clientX: finishedTouch.clientX,
+          clientY: finishedTouch.clientY,
+          point: toContentPoint(
+            finishedTouch.clientX,
+            finishedTouch.clientY,
+            view.bounds,
+            state,
+            view.contentWidth,
+            view.contentHeight
+          )
+        });
+      }
+    }
+
+    function wheel(event) {
+      if (!state.enabled || !event.ctrlKey) {
+        return;
+      }
+
+      event.preventDefault();
+      const bounds = rectangle();
+      const focalX = event.clientX - bounds.left;
+      const focalY = event.clientY - bounds.top;
+      setZoom(state.zoom + (event.deltaY < 0 ? 0.25 : -0.25), focalX, focalY);
+    }
+
+    function inputZoom() {
+      setZoom(Number(zoomInput.value));
+    }
+
+    function zoomIn() {
+      setZoom(state.zoom + 0.5);
+    }
+
+    function zoomOut() {
+      setZoom(state.zoom - 0.5);
+    }
+
+    viewport.addEventListener("pointerdown", pointerDown);
+    viewport.addEventListener("pointermove", pointerMove);
+    viewport.addEventListener("pointerup", function (event) {
+      finishPointer(event, false);
+    });
+    viewport.addEventListener("pointercancel", function (event) {
+      finishPointer(event, true);
+    });
+    viewport.addEventListener("touchstart", touchStart, { passive: false });
+    viewport.addEventListener("touchmove", touchMove, { passive: false });
+    viewport.addEventListener("touchend", function (event) {
+      finishTouch(event, false);
+    });
+    viewport.addEventListener("touchcancel", function (event) {
+      finishTouch(event, true);
+    });
+    viewport.addEventListener("wheel", wheel, { passive: false });
+    zoomInput?.addEventListener("input", inputZoom);
+    zoomInButton?.addEventListener("click", zoomIn);
+    zoomOutButton?.addEventListener("click", zoomOut);
+    resetButton?.addEventListener("click", reset);
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", applyState);
+    }
+
+    applyState();
+
+    return {
+      reset,
+      refresh: applyState,
+      setZoom,
+      setView,
+      setHomeView: function (nextView) {
+        homeView = normalizeView(nextView, state.maxZoom);
+        applyState();
+      },
+      setOptions: function (nextOptions) {
+        if (Object.hasOwn(nextOptions, "maxZoom")) {
+          state.maxZoom = Math.max(1, Number(nextOptions.maxZoom) || 1);
+          homeView = normalizeView(homeView, state.maxZoom);
+        }
+        if (Object.hasOwn(nextOptions, "enabled")) {
+          state.enabled = nextOptions.enabled !== false;
+        }
+        if (!state.enabled) {
+          const resetState = stateForView(homeView);
+          state.zoom = resetState.zoom;
+          state.panX = resetState.panX;
+          state.panY = resetState.panY;
+        } else {
+          state.zoom = normalizeZoom(state.zoom, state.maxZoom);
+        }
+        applyState();
+      },
+      getState: function () {
+        return { ...state };
+      },
+      getHomeView: function () {
+        return { ...homeView };
+      },
+      contentPoint: function (clientX, clientY) {
+        const view = measurements();
+        return toContentPoint(
+          clientX,
+          clientY,
+          view.bounds,
+          state,
+          view.contentWidth,
+          view.contentHeight
+        );
+      }
+    };
+  }
+
+  return {
+    clamp,
+    normalizeZoom,
+    normalizeView,
+    clampPan,
+    toContentPoint,
+    viewStateFromCenter,
+    createController
+  };
+});
+
+    </script>
+    <script>
+(function () {
+  "use strict";
+
+  let data = window.ORIENTATION_MAP_DATA;
+
+  if (!data || !Array.isArray(data.locations)) {
+    return;
+  }
+
+  const elements = {
+    siteTitle: document.querySelector("#site-title"),
+    introduction: document.querySelector("#site-introduction"),
+    siteEyebrow: document.querySelector("#site-eyebrow"),
+    siteHeader: document.querySelector("#site-header"),
+    headerMark: document.querySelector(".header-mark"),
+    headerIcon: document.querySelector("#header-icon"),
+    headerMarkDefault: document.querySelector("#header-mark-default"),
+    mapFrame: document.querySelector("#map-frame"),
+    mapCanvas: document.querySelector("#map-canvas"),
+    mapImage: document.querySelector("#map-image"),
+    mapPlaceholder: document.querySelector("#map-placeholder"),
+    mapShade: document.querySelector("#map-shade"),
+    markers: document.querySelector("#map-markers"),
+    locationKey: document.querySelector("#location-key"),
+    mapControls: document.querySelector("#map-controls"),
+    mapZoomOut: document.querySelector("#map-zoom-out"),
+    mapZoomRange: document.querySelector("#map-zoom-range"),
+    mapZoomIn: document.querySelector("#map-zoom-in"),
+    mapZoomReset: document.querySelector("#map-zoom-reset"),
+    mapZoomStatus: document.querySelector("#map-zoom-status"),
+    mapNavigationHint: document.querySelector("#map-navigation-hint"),
+    mapExpand: document.querySelector("#map-expand"),
+    mapExpandLabel: document.querySelector("#map-expand-label"),
+    dialog: document.querySelector("#location-dialog"),
+    close: document.querySelector("#dialog-close"),
+    dialogCount: document.querySelector("#dialog-count"),
+    dialogTitle: document.querySelector("#dialog-title"),
+    carousel: document.querySelector("#carousel"),
+    carouselStage: document.querySelector("#carousel-stage"),
+    carouselControls: document.querySelector("#carousel-controls"),
+    previous: document.querySelector("#carousel-previous"),
+    next: document.querySelector("#carousel-next"),
+    carouselStatus: document.querySelector("#carousel-status"),
+    description: document.querySelector("#dialog-description"),
+    links: document.querySelector("#dialog-links")
+  };
+
+  let activeLocation = null;
+  let activeImageIndex = 0;
+  let dialogInvoker = null;
+  let touchStartX = null;
+  let mapExpanded = false;
+
+  const mapController = window.OrientationMapViewport.createController({
+    viewport: elements.mapFrame,
+    content: elements.mapCanvas,
+    zoomInput: elements.mapZoomRange,
+    zoomInButton: elements.mapZoomIn,
+    zoomOutButton: elements.mapZoomOut,
+    resetButton: elements.mapZoomReset,
+    zoomStatus: elements.mapZoomStatus,
+    ignoredSelector: "button, input, a, .map-controls",
+    onViewChange: positionMarkerAnchors
+  });
+
+  function setText(element, value) {
+    element.textContent = typeof value === "string" ? value : "";
+  }
+
+  function clampCoordinate(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.min(1, Math.max(0, number)) : 0.5;
+  }
+
+  function locationImages(location) {
+    return Array.isArray(location.images) && location.images.length > 0
+      ? location.images
+      : [{ src: "", alt: `Photo placeholder for ${location.title}` }];
+  }
+
+  function safeExternalUrl(value) {
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function validMarkerColor(value) {
+    return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value)
+      ? value
+      : "#245c4c";
+  }
+
+  function markerSize(value) {
+    const number = Number(value);
+    return Math.min(88, Math.max(36, Number.isFinite(number) ? number : 56));
+  }
+
+  function markerStyle(value) {
+    return ["pin", "star", "circle", "custom"].includes(value)
+      ? value
+      : "pin";
+  }
+
+  function markerForeground(value) {
+    return value === "black" ? "black" : "white";
+  }
+
+  function headerIconWidth(header) {
+    const width = Number(header?.iconWidth);
+    if (Number.isFinite(width)) {
+      return Math.min(50, Math.max(5, Math.round(width)));
+    }
+
+    const previousScale = Number(header?.iconScale);
+    return Math.min(
+      50,
+      Math.max(
+        5,
+        Number.isFinite(previousScale)
+          ? Math.round(previousScale * 0.16)
+          : 16
+      )
+    );
+  }
+
+  function mapOverlayStrength(value) {
+    const number = Number(value);
+    return Math.min(
+      75,
+      Math.max(5, Number.isFinite(number) ? Math.round(number) : 18)
+    );
+  }
+
+  function markerForegroundColor(value) {
+    return markerForeground(value) === "black" ? "#000000" : "#ffffff";
+  }
+
+  function galleryAspectRatio(value) {
+    const ratios = {
+      "1:1": "1 / 1",
+      "4:3": "4 / 3",
+      "16:9": "16 / 9",
+      "9:16": "9 / 16"
+    };
+    return ratios[value] || ratios["16:9"];
+  }
+
+  function headerAlignment(value) {
+    return ["left", "center", "right"].includes(value) ? value : "left";
+  }
+
+  function positionMarkerAnchors(viewState) {
+    const width =
+      elements.mapCanvas.offsetWidth || elements.mapFrame.clientWidth;
+    const height =
+      elements.mapCanvas.offsetHeight || elements.mapFrame.clientHeight;
+
+    elements.markers
+      .querySelectorAll(".map-marker-anchor")
+      .forEach(function (anchor) {
+        const x = clampCoordinate(anchor.dataset.mapX);
+        const y = clampCoordinate(anchor.dataset.mapY);
+        anchor.style.left = `${viewState.panX + x * width * viewState.zoom}px`;
+        anchor.style.top = `${viewState.panY + y * height * viewState.zoom}px`;
+      });
+  }
+
+  function configurePage() {
+    document.title = data.siteTitle || "Orientation Photo Quest";
+    setText(elements.siteTitle, data.siteTitle || "Orientation Photo Quest");
+    setText(elements.introduction, data.introduction);
+
+    const header = data.header || {};
+    const eyebrow =
+      typeof header.eyebrow === "string"
+        ? header.eyebrow
+        : "Explore at your own pace";
+    setText(elements.siteEyebrow, eyebrow);
+    elements.siteEyebrow.hidden = !eyebrow.trim();
+    elements.headerMark.style.setProperty(
+      "--header-icon-width",
+      `${headerIconWidth(header)}%`
+    );
+    elements.siteHeader.dataset.headerAlignment = headerAlignment(
+      header.alignment
+    );
+    elements.headerIcon.removeAttribute("src");
+    elements.headerIcon.hidden = true;
+    elements.headerMarkDefault.hidden = false;
+
+    if (header.icon) {
+      elements.headerIcon.src = header.icon;
+      elements.headerIcon.alt =
+        typeof header.iconAlt === "string" ? header.iconAlt : "";
+      elements.headerIcon.hidden = false;
+      elements.headerMarkDefault.hidden = true;
+      elements.headerIcon.onerror = function () {
+        elements.headerIcon.hidden = true;
+        elements.headerMarkDefault.hidden = false;
+      };
+    }
+
+    const map = data.map || {};
+    const allowZoom = map.allowZoom !== false;
+    const maxZoom = Math.min(8, Math.max(2, Number(map.maxZoom) || 4));
+    const contrastOverlay = map.contrastOverlay || {};
+    const overlayEnabled = contrastOverlay.enabled === true;
+    const overlayStrength = mapOverlayStrength(contrastOverlay.strength);
+
+    elements.mapControls.hidden = !allowZoom;
+    elements.mapNavigationHint.hidden = !allowZoom;
+    elements.mapShade.hidden = !overlayEnabled;
+    elements.mapShade.style.setProperty(
+      "--map-overlay-strength",
+      String(overlayStrength / 100)
+    );
+    mapController.setOptions({
+      enabled: allowZoom,
+      maxZoom
+    });
+    mapController.setHomeView(
+      window.OrientationMapViewport.normalizeView(map.initialView, maxZoom)
+    );
+    mapController.reset();
+
+    elements.mapImage.removeAttribute("src");
+    elements.mapImage.hidden = true;
+    elements.mapPlaceholder.hidden = false;
+
+    if (map.image) {
+      elements.mapImage.src = map.image;
+      elements.mapImage.alt = map.alt || "Orientation map";
+      elements.mapImage.hidden = false;
+      elements.mapPlaceholder.hidden = true;
+      elements.mapImage.onload = function () {
+        mapController.reset();
+      };
+
+      elements.mapImage.onerror = function () {
+        elements.mapImage.hidden = true;
+        elements.mapPlaceholder.hidden = false;
+        mapController.reset();
+      };
+    }
+
+    elements.locationKey.hidden = data.display?.showLocationKey === false;
+  }
+
+  function setMapExpanded(expanded) {
+    mapExpanded = Boolean(expanded);
+    elements.mapFrame.classList.toggle("is-expanded", mapExpanded);
+    document.body.classList.toggle("map-expanded-open", mapExpanded);
+    elements.mapExpand.setAttribute("aria-expanded", String(mapExpanded));
+    setText(elements.mapExpandLabel, mapExpanded ? "Close map" : "Expand map");
+    elements.mapExpand.setAttribute(
+      "aria-label",
+      mapExpanded ? "Close expanded map" : "Expand map to fill the screen"
+    );
+
+    window.requestAnimationFrame(function () {
+      mapController.reset();
+    });
+  }
+
+  function buildLocations() {
+    elements.markers.replaceChildren();
+    elements.locationKey.replaceChildren();
+
+    data.locations.forEach(function (location, index) {
+      const markerAppearance = location.marker || {};
+      const color = validMarkerColor(markerAppearance.color);
+      const size = markerSize(markerAppearance.size);
+      const customIcon =
+        typeof markerAppearance.icon === "string" ? markerAppearance.icon : "";
+      const selectedStyle = markerStyle(markerAppearance.style);
+      const renderedStyle =
+        selectedStyle === "custom" && !customIcon ? "pin" : selectedStyle;
+      const foreground = markerForegroundColor(markerAppearance.foreground);
+      const markerAnchor = document.createElement("div");
+      const marker = document.createElement("button");
+      const markerNumber = document.createElement("span");
+
+      markerAnchor.className = "map-marker-anchor";
+      markerAnchor.dataset.mapX = String(clampCoordinate(location.x));
+      markerAnchor.dataset.mapY = String(clampCoordinate(location.y));
+      markerAnchor.style.setProperty("--marker-color", color);
+      markerAnchor.style.setProperty("--marker-size", `${size}px`);
+      markerAnchor.style.setProperty("--marker-foreground", foreground);
+      marker.type = "button";
+      marker.className = "map-marker";
+      marker.dataset.markerStyle = renderedStyle;
+      marker.setAttribute("aria-label", `Open ${location.title} details`);
+      markerNumber.className = "map-marker-number";
+      markerNumber.textContent = String(index + 1);
+
+      if (renderedStyle === "custom") {
+        const markerImage = document.createElement("img");
+        markerImage.className = "map-marker-custom-icon";
+        markerImage.src = customIcon;
+        markerImage.alt = "";
+        markerImage.draggable = false;
+        marker.append(markerImage);
+      }
+
+      marker.append(markerNumber);
+      marker.addEventListener("click", function () {
+        openLocation(location, index, marker);
+      });
+      markerAnchor.append(marker);
+      elements.markers.append(markerAnchor);
+
+      const keyItem = document.createElement("li");
+      const keyButton = document.createElement("button");
+      const keyNumber = document.createElement("span");
+      const keyTitle = document.createElement("span");
+
+      keyButton.type = "button";
+      keyButton.className = "key-button";
+      keyButton.setAttribute("aria-label", `Open ${location.title} details`);
+      keyNumber.className = "key-number";
+      keyNumber.style.backgroundColor = color;
+      keyNumber.style.color = foreground;
+      keyNumber.style.borderColor = foreground;
+      keyTitle.className = "key-title";
+      keyNumber.textContent = String(index + 1);
+      keyTitle.textContent = location.title;
+      keyButton.append(keyNumber, keyTitle);
+      keyButton.addEventListener("click", function () {
+        openLocation(location, index, keyButton);
+      });
+      keyItem.append(keyButton);
+      elements.locationKey.append(keyItem);
+    });
+
+    positionMarkerAnchors(mapController.getState());
+  }
+
+  function openLocation(location, locationIndex, invoker) {
+    activeLocation = location;
+    activeImageIndex = 0;
+    dialogInvoker = invoker;
+
+    setText(
+      elements.dialogCount,
+      `Location ${locationIndex + 1} of ${data.locations.length}`
+    );
+    setText(elements.dialogTitle, location.title);
+    setText(elements.description, location.description);
+    elements.carouselStage.style.setProperty(
+      "--gallery-aspect-ratio",
+      galleryAspectRatio(location.gallery?.aspectRatio)
+    );
+    buildLinks(location);
+    renderImage();
+    elements.dialog.showModal();
+    elements.close.focus();
+  }
+
+  function buildLinks(location) {
+    elements.links.replaceChildren();
+
+    const links = Array.isArray(location.links) ? location.links.slice(0, 2) : [];
+    links.forEach(function (link) {
+      const href = safeExternalUrl(link.url);
+      if (!href || !link.label) {
+        return;
+      }
+
+      const anchor = document.createElement("a");
+      anchor.className = "dialog-link";
+      anchor.href = href;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      anchor.textContent = link.label;
+      elements.links.append(anchor);
+    });
+  }
+
+  function renderImage() {
+    if (!activeLocation) {
+      return;
+    }
+
+    const images = locationImages(activeLocation);
+    const imageData = images[activeImageIndex];
+    const hasMultipleImages = images.length > 1;
+
+    elements.carouselStage.replaceChildren();
+
+    if (imageData.src) {
+      const image = document.createElement("img");
+      image.src = imageData.src;
+      image.alt = imageData.alt || "";
+      elements.carouselStage.append(image);
+    } else {
+      const placeholder = document.createElement("div");
+      const placeholderLabel = document.createElement("span");
+
+      placeholder.className = "photo-placeholder";
+      placeholder.setAttribute("role", "img");
+      placeholder.setAttribute("aria-label", imageData.alt || "Photo placeholder");
+      placeholderLabel.textContent = imageData.alt || "Location photo";
+      placeholder.append(placeholderLabel);
+      elements.carouselStage.append(placeholder);
+    }
+
+    elements.carouselControls.hidden = !hasMultipleImages;
+    elements.previous.disabled = !hasMultipleImages;
+    elements.next.disabled = !hasMultipleImages;
+    setText(
+      elements.carouselStatus,
+      hasMultipleImages ? `${activeImageIndex + 1} of ${images.length}` : ""
+    );
+  }
+
+  function showPreviousImage() {
+    const images = locationImages(activeLocation);
+    activeImageIndex = (activeImageIndex - 1 + images.length) % images.length;
+    renderImage();
+  }
+
+  function showNextImage() {
+    const images = locationImages(activeLocation);
+    activeImageIndex = (activeImageIndex + 1) % images.length;
+    renderImage();
+  }
+
+  function closeDialog() {
+    if (elements.dialog.open) {
+      elements.dialog.close();
+    }
+  }
+
+  function renderSite(nextData) {
+    if (!nextData || !Array.isArray(nextData.locations)) {
+      return;
+    }
+
+    closeDialog();
+    data = nextData;
+    configurePage();
+    buildLocations();
+  }
+
+  elements.close.addEventListener("click", closeDialog);
+  elements.previous.addEventListener("click", showPreviousImage);
+  elements.next.addEventListener("click", showNextImage);
+  elements.mapExpand.addEventListener("click", function () {
+    setMapExpanded(!mapExpanded);
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && mapExpanded && !elements.dialog.open) {
+      event.preventDefault();
+      setMapExpanded(false);
+      elements.mapExpand.focus();
+    }
+  });
+
+  elements.dialog.addEventListener("click", function (event) {
+    if (event.target === elements.dialog) {
+      closeDialog();
+    }
+  });
+
+  elements.dialog.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowLeft" && activeLocation) {
+      event.preventDefault();
+      showPreviousImage();
+    } else if (event.key === "ArrowRight" && activeLocation) {
+      event.preventDefault();
+      showNextImage();
+    }
+  });
+
+  elements.dialog.addEventListener("close", function () {
+    if (dialogInvoker && document.contains(dialogInvoker)) {
+      dialogInvoker.focus();
+    }
+    activeLocation = null;
+    dialogInvoker = null;
+  });
+
+  elements.carouselStage.addEventListener(
+    "touchstart",
+    function (event) {
+      touchStartX = event.changedTouches[0].clientX;
+    },
+    { passive: true }
+  );
+
+  elements.carouselStage.addEventListener(
+    "touchend",
+    function (event) {
+      if (touchStartX === null || !activeLocation) {
+        return;
+      }
+
+      const distance = event.changedTouches[0].clientX - touchStartX;
+      touchStartX = null;
+
+      if (Math.abs(distance) < 48 || locationImages(activeLocation).length < 2) {
+        return;
+      }
+
+      if (distance > 0) {
+        showPreviousImage();
+      } else {
+        showNextImage();
+      }
+    },
+    { passive: true }
+  );
+
+  window.addEventListener("message", function (event) {
+    const message = event.data;
+    if (
+      !message ||
+      message.type !== "orientation-map-preview" ||
+      !message.data ||
+      !Array.isArray(message.data.locations)
+    ) {
+      return;
+    }
+
+    renderSite(message.data);
+  });
+
+  window.OrientationMapViewer = {
+    render: renderSite
+  };
+
+  renderSite(data);
+})();
+
+    </script>
+  </body>
+</html>
