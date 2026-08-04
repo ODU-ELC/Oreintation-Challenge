@@ -1,6 +1,7 @@
 Orientation Photo Quest website
 
-Upload every file and folder in this ZIP to the same GitHub repository folder.
+Publish every file and folder in this website folder to the same GitHub repository folder.
+If you downloaded a ZIP, extract it first and publish the extracted contents.
 Keep the assets folder structure unchanged.
 Enable GitHub Pages for the branch and folder that contains index.html.
 The empty .nojekyll file tells GitHub Pages to serve these files directly.
